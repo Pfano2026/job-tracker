@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Application Tracker</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#222}
+  h1{margin-bottom:.25rem}
+  .summary{display:flex;gap:.75rem;flex-wrap:wrap;margin:1rem 0}
+  .card{flex:1;min-width:110px;padding:.75rem;border-radius:8px;background:#f3f4f6;text-align:center}
+  .card b{display:block;font-size:1.6rem}
+  form.add{display:flex;gap:.5rem;flex-wrap:wrap;margin:1rem 0}
+  input,select,button{padding:.5rem;border:1px solid #ccc;border-radius:6px;font-size:1rem}
+  button{background:#2563eb;color:#fff;border:none;cursor:pointer}
+  button.del{background:#dc2626}
+  table{width:100%;border-collapse:collapse;margin-top:1rem}
+  th,td{padding:.6rem;border-bottom:1px solid #e5e7eb;text-align:left}
+  .sortlinks a{margin-right:.75rem}
+  .badge{padding:.15rem .5rem;border-radius:999px;font-size:.85rem;background:#e5e7eb}
+  .interview{background:#fef3c7}.offer{background:#d1fae5}.rejected{background:#fee2e2}
+  td form{display:inline}
+</style>
+</head>
+<body>
+<h1>Job Application Tracker</h1>
+<p>{{ total }} application{{ '' if total == 1 else 's' }} tracked</p>
+
+<div class="summary">
+  {% for s in statuses %}
+  <div class="card"><b>{{ counts[s] }}</b>{{ s|capitalize }}</div>
+  {% endfor %}
+</div>
+
+<form class="add" method="post" action="{{ url_for('add') }}">
+  <input name="company" placeholder="Company" required>
+  <input name="role" placeholder="Role" required>
+  <input type="date" name="date_applied" required>
+  <button type="submit">Add application</button>
+</form>
+
+<div class="sortlinks">Sort by:
+  <a href="{{ url_for('index', sort='date') }}">{{ '<b>Date</b>'|safe if sort=='date' else 'Date' }}</a>
+  <a href="{{ url_for('index', sort='status') }}">{{ '<b>Status</b>'|safe if sort=='status' else 'Status' }}</a>
+</div>
+
+<table>
+  <tr><th>Company</th><th>Role</th><th>Applied</th><th>Status</th><th></th></tr>
+  {% for a in apps %}
+  <tr>
+    <td>{{ a.company }}</td>
+    <td>{{ a.role }}</td>
+    <td>{{ a.date_applied }}</td>
+    <td>
+      <form method="post" action="{{ url_for('update', app_id=a.id, sort=sort) }}">
+        <select name="status" onchange="this.form.submit()" class="badge {{ a.status }}">
+          {% for s in statuses %}
+          <option value="{{ s }}" {{ 'selected' if s == a.status }}>{{ s|capitalize }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </td>
+    <td>
+      <form method="post" action="{{ url_for('delete', app_id=a.id) }}" onsubmit="return confirm('Delete this application?')">
+        <button class="del" type="submit">Delete</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5">No applications yet. Add your first one above.</td></tr>
+  {% endfor %}
+</table>
+</body>
+</html>
